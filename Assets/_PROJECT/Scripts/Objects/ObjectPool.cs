@@ -1,45 +1,36 @@
-using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
 {
-    public static ObjectPool instance;
+    public GameObject prefab;
+    private Queue<GameObject> pool = new Queue<GameObject>();
+    [SerializeField] private int StartingPoolSize = 50;
 
-    private List<GameObject> pooledObjects = new List<GameObject>();
-    private int amountToPool = 50;
-    
-    [SerializeField] private GameObject FarmlandPrefab;
-
-    private void Awake()
+    private void OnEnable()
     {
-        if (instance == null)
+        for (int i = 0; i < StartingPoolSize; i++)
         {
-            instance = this;
-        }
-    }
-
-    private void Start()
-    {
-        for (int i = 0; i < amountToPool; i++)
-        {
-            GameObject obj = Instantiate(FarmlandPrefab);
+            GameObject obj = Instantiate(prefab);
             obj.SetActive(false);
-            pooledObjects.Add(obj);
+            pool.Enqueue(obj);
         }
     }
 
-    public GameObject GetPooledObject()
+    public GameObject GetObject()
     {
-        for (int i = 0; i < pooledObjects.Count; i++)
+        if (pool.Count > 0)
         {
-            if (!pooledObjects[i].activeInHierarchy)
-            {
-                return pooledObjects[i];
-            }
+            GameObject obj = pool.Dequeue();
+            obj.SetActive(true);
+            return obj;
         }
+        return Instantiate(prefab);
+    }
 
-        return null;
+    public void ReturnObject(GameObject obj)
+    {
+        obj.SetActive(false);
+        pool.Enqueue(obj);
     }
 }
